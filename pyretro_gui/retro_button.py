@@ -11,20 +11,20 @@ class RetroButton:
     PAD = 6
     ICON_PATH = base_path + "/ui_icons"
 
-    def __init__ (self, x: int, y: int, w: int = 32, h: int = 32, colors: list[tuple] = [Colors.BG, Colors.LIGHT_BG], onclick = None, onpressed = None, anchors: list[int] = [0, 0], z_index: int = 0, name: str | None = None, image_path: str | None = None):
-        self.name = name
+    def __init__ (self, x: int, y: int, w: int = 32, h: int = 32, colors: list[tuple] = [Colors.BG, Colors.LIGHT_BG], onclick = None, onpressed = None, anchors: list[int] = [0, 0], z_index: int = 0, label="Test",name: str | None = None, image_path: str | None = None):
         self.x = x
         self.y = y
         self.w = w
         self.h = h
         self.rect = pygame.Rect(x, y, w, h)
         self.colors = colors
+        self.label=label
 
         self.z_index = z_index
         self.onclick = onclick
         self.onpressed = onpressed
         self.anchors = anchors
-
+        self.name = name
         self.image_path = image_path
         self.img = None
         self.load_img()

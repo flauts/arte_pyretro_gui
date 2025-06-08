@@ -8,12 +8,12 @@ from .constants import Colors
 from .scrollbar import ScrollBar
 
 class Container():
-    def __init__ (self, x: int, y: int, w: int, h: int, content_surf: pygame.Surface, onclick = None, onpressed = None, anchors: list[int] = [0, 0], z_index = -100):
+    def __init__ (self, x: int, y: int, w: int, h: int, content_surf: pygame.Surface, onclick = None, onpressed = None, anchors: list[int] = [0, 0], z_index = -100,label="Test"):
 
         self.x, self.y = x, y
         self.w, self.h = w, h
         self._surface = pygame.Surface((w, h))
-
+        self.label=label
         self.content_surf = content_surf
         self.content_size = list(content_surf.get_size())
 
@@ -108,6 +108,8 @@ class Container():
         for s in self.scrollbars:
             s.update(mouse_pos, mouse_btns, self.get_rect(win_size).topleft, self._surface.get_rect())
 
+    def close_container(self,mouse_pos):
+        app_state.widgets.remove(self)
 
     def render (self, win, _):
         self._surface.fill((0, 0, 0))
@@ -123,9 +125,6 @@ class Container():
         pygame.draw.rect(self._surface, Colors.TEXT, self._surface.get_rect(), 1)
         win.blit(self._surface, self.get_rect(win.get_size()).topleft)
 
-    def close_container(self):
-        app_state.widgets.remove(self)
-
 from .move_button import MoveButton  # importar MoveButton
 
 class MovableContainer(Container):
@@ -139,32 +138,22 @@ class MovableContainer(Container):
         icon_size = RetroButton.ICON_SIZE
         pad = RetroButton.PAD
         icon_pad = RetroButton.PAD//2
-        # Crear un MoveButton en la parte superior que controla el movimiento
 
         self.move_button = MoveButton(self.x, self.y+60, 10, 20)
+        self.move_button.name = self.label
         # Poner z_index alto
         MovableContainer._max_z_index += 1
         self.z_index = MovableContainer._max_z_index
-        self.close_button = RetroButton(icon_size + icon_pad + pad, pad, w = icon_size, h = icon_size, colors=[Colors.CLOSE, Colors.CLOSE_HOVER],
-                                        anchors=[1, 0],
+        self.close_button = RetroButton(self.x, icon_size, w = icon_size, h = icon_size, colors=[Colors.CLOSE, Colors.CLOSE_HOVER],
                                         onclick=self.close_container, z_index=self.z_index, name="close")
-    #
-    # def on_move_pressed(self, button, pos_inside):
-    #     # Cuando se presiona el MoveButton, iniciar arrastre del container
-    #     mouse_pos = pygame.mouse.get_pos()
-    #     self.dragging = True
-    #     self.drag_offset = (mouse_pos[0] - self.x, mouse_pos[1] - self.y)
-    #     # Subir el z_index para estar arriba
-    #     MovableContainer._max_z_index += 1
-    #     self.z_index = MovableContainer._max_z_index
+
 
     def update(self, mouse_pos, mouse_btns, win_size):
         self.move_button.x = self.x
         self.move_button.y = self.y
         self.move_button.w = self.w
-        self.close_button.x = self.x
+        self.close_button.x = self.x + self.w - self.close_button.w - self.close_button.PAD//2
         self.close_button.y = self.y
-        self.close_button.w = self.w
         self.close_button.update(mouse_pos,mouse_btns,win_size)
 
         # Obtener rect del container

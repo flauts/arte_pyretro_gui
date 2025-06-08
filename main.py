@@ -66,7 +66,7 @@ def on_icon_click(mouse_pos):
 
     # Crear un Container más pequeño que el contenido para activar scroll
     container_width, container_height = 300, 200
-    container = MovableContainer(50, 50, container_width, container_height, content_surf)
+    container = MovableContainer(50, 50, container_width*2, container_height*2, content_surf)
     # Función para manejar click dentro del container (opcional)
     def container_click(container_obj, pos):
         print(f"Click dentro de container en posición relativa {pos}")

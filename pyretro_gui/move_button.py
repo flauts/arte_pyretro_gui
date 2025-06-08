@@ -15,17 +15,18 @@ pygame.font.init()
 class MoveButton(RetroButton):
     APPICON_SIZE = 24
 
-    def __init__ (self, x: int, y: int, w: int = 32, h: int = 32, colors: list[tuple] = [Colors.BG, Colors.LIGHT_BG], border_color: tuple = Colors.TEXT, shadow_color: tuple = Colors.SHADOW, onclick = None, onpressed = None, anchors: list[int] = [0, 0, 0, 0], z_index: int = 0):
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.rect = pygame.Rect(x, y, w, h)
-        self.colors = colors
+    def __init__ (self, x: int, y: int, w: int = 32, h: int = 32, colors: list[tuple] = [Colors.BG, Colors.LIGHT_BG], border_color: tuple = Colors.TEXT, shadow_color: tuple = Colors.SHADOW, onclick = None, onpressed = None, anchors: list[int] = [0, 0, 0, 0], z_index: int = 0,label="Test"):
+        super().__init__(x, y, w, h, colors, onclick, onpressed, anchors, z_index,label)
+        # self.x = x
+        # self.y = y
+        # self.w = w
+        # self.h = h
+        # self.rect = pygame.Rect(x, y, w, h)
+        # self.colors = colors
         self.border_color = border_color
         self.shadow_color = shadow_color
-        self.z_index = z_index
-        
+        # self.z_index = z_index
+
         self.onclick = onclick
         self.onpressed = onpressed
         self.anchors = anchors
@@ -74,6 +75,6 @@ class MoveButton(RetroButton):
         pygame.draw.rect(win, self.border_color, r, 1)
         pygame.draw.line(win, self.border_color, (r.x, r.y + r.h), (r.x + r.w - 1, r.y + r.h), 1)
 
-        text_surf = font.render(pygame.display.get_caption()[0], False, self.border_color)
+        text_surf = font.render(self.label, False, self.border_color)
         win.blit(text_surf, [r.x + 4, r.y + 3])
 
