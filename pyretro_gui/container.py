@@ -139,8 +139,7 @@ class MovableContainer(Container):
         pad = RetroButton.PAD
         icon_pad = RetroButton.PAD//2
 
-        self.move_button = MoveButton(self.x, self.y+60, 10, 20)
-        self.move_button.name = self.label
+        self.move_button = MoveButton(self.x, self.y+60, 10, 20,label=self.label)
         # Poner z_index alto
         MovableContainer._max_z_index += 1
         self.z_index = MovableContainer._max_z_index
@@ -215,3 +214,114 @@ class MovableContainer(Container):
         super().render(win, win_size)
         self.move_button.render(win, win_size)
         self.close_button.render(win, win_size)
+
+
+
+from .retro_button import RetroButton
+from .constants import Colors
+from .retro_text import font
+
+
+class ChatAppWindow(MovableContainer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # self.content_surf = pygame.Surface((self.w, self.h - 100))
+        self.chat_list = ["Chat con Ana", "Chat con Pedro", "Grupo Amigos"]
+        self.chats = {
+            "Chat con Ana": ["Hola!", "¿Cómo estás?"],
+            "Chat con Pedro": ["¿Viste el partido?", "Qué locura!"],
+            "Grupo Amigos": ["🤙", "Vamos a juntarnos!"]
+        }
+        self.selected_chat = None
+        self.input_options = ["👍", "Gracias", "Hasta luego"]
+        self.state = "list"  # 'list' o 'chat'
+
+        self.buttons = []  # Botones para la lista o las opciones
+        self.back_button = RetroButton(10, 10, 80, 24, [Colors.BG, Colors.LIGHT_BG],
+                                       label="< Volver", onclick=self.back_to_list)
+        self.back_button.z_index = 10
+
+        self.create_list_buttons()
+
+    def create_list_buttons(self):
+        self.buttons.clear()
+        btn_y_start = 50
+        btn_h = 30
+        for i, chat_name in enumerate(self.chat_list):
+            btn = RetroButton(10, btn_y_start + i * btn_h, self.w - 20, btn_h,
+                              [Colors.BG, Colors.LIGHT_BG],
+                              label=chat_name, onclick=self.make_select_chat_callback(chat_name))
+            btn.z_index = 5
+            self.buttons.append(btn)
+
+    def make_select_chat_callback(self, chat_name):
+        def select_chat(btn):
+            self.selected_chat = chat_name
+            self.state = "chat"
+            self.create_chat_buttons()
+
+        return select_chat
+
+    def create_chat_buttons(self):
+        self.buttons.clear()
+        btn_y_start = self.h - 100
+        btn_h = 30
+        btn_w = (self.w - 40) // len(self.input_options)
+        for i, option in enumerate(self.input_options):
+            btn = RetroButton(10 + i * (btn_w + 5), btn_y_start, btn_w, btn_h,
+                              [Colors.BG, Colors.LIGHT_BG], Colors.TEXT, Colors.SHADOW,
+                              label=option, onclick=self.make_send_message_callback(option))
+            btn.z_index = 5
+            self.buttons.append(btn)
+
+    def make_send_message_callback(self, message):
+        def send_message(btn):
+            if self.selected_chat:
+                self.chats[self.selected_chat].append(message)
+
+        return send_message
+
+    def back_to_list(self, btn=None):
+        self.state = "list"
+        self.selected_chat = None
+        self.create_list_buttons()
+
+    def update(self, mouse_pos, mouse_btns, win_size):
+        super().update(mouse_pos, mouse_btns, win_size)
+
+        self.back_button.update(mouse_pos, mouse_btns, win_size)
+        for btn in self.buttons:
+            btn.update(mouse_pos, mouse_btns, win_size)
+
+    def render(self, win, win_size):
+        super().render(win, win_size)
+        # surf = self.content_surf
+        # surf.fill(Colors.BG)
+
+        if self.state == "list":
+            # Título chats
+            title = font.render("Chats", True, Colors.TEXT)
+            # surf.blit(title, (10, 10))
+
+        elif self.state == "chat":
+            # Botón volver
+            # self.back_button.render(surf, win_size)
+
+            # Título chat activo
+            chat_title = font.render(self.selected_chat or "", True, Colors.TEXT)
+            # surf.blit(chat_title, (100, 15))
+
+            # Mostrar mensajes
+            y = 50
+            for msg in self.chats.get(self.selected_chat, []):
+                msg_txt = font.render(msg, True, Colors.TEXT)
+                # surf.blit(msg_txt, (10, y))
+                y += 30
+
+        # Renderizar botones (lista chats u opciones)
+        for btn in self.buttons:
+            pass# btn.render(surf, win_size)
+
+        # Finalmente bliteamos todo al win
+        # win.blit(surf, (self.x, self.y))
+

@@ -3,7 +3,8 @@ import pyretro_gui as rg
 from pyretro_gui import Colors, RetroIcon
 from pyretro_gui.container import MovableContainer
 import pygame
-rg.create_window(1000, 1000, "Test App title", "testicon.png")
+from open_window import *
+rg.create_window(940, 680, "Test App title", "testicon.png")
 def file_new(click):
     print("File -> New clicked!")
 
@@ -45,34 +46,14 @@ def abrir_mi_computadora(btn):
 computer_icon = RetroIcon(100, 100, image_path="testicon2.png",label="computer")
 mail_icon = RetroIcon(200, 100, image_path="testicon2.png",label="mail")
 canvas_icon = RetroIcon(300, 100, image_path="testicon2.png",label="canvas",onclick=abrir_mi_computadora)
+chat_icon = RetroIcon(400, 100, image_path="testicon2.png",label="chat",onclick=on_chat_icon_click)
 
-
+rg.add_widget(chat_icon)
 rg.add_widget(computer_icon)
 rg.add_widget(mail_icon)
 rg.add_widget(canvas_icon)
-containers = []
 
-def on_icon_click(mouse_pos):
-    # Crear superficie de contenido más grande que el container para activarlo scroll
-    content_width, content_height = 600, 400
-    content_surf = pygame.Surface((content_width, content_height))
-    content_surf.fill((220, 220, 240))  # Fondo claro
 
-    # Dibujar algo en el contenido para demostrar scroll
-    font = pygame.font.SysFont(None, 24)
-    for y in range(0, content_height, 40):
-        txt = font.render(f"Línea en y={y}", True, (50, 50, 100))
-        content_surf.blit(txt, (10, y))
-
-    # Crear un Container más pequeño que el contenido para activar scroll
-    container_width, container_height = 300, 200
-    container = MovableContainer(50, 50, container_width*2, container_height*2, content_surf)
-    # Función para manejar click dentro del container (opcional)
-    def container_click(container_obj, pos):
-        print(f"Click dentro de container en posición relativa {pos}")
-    container.onclick = container_click
-
-    rg.add_widget(container)
 
 
 icon = RetroIcon(x=300, y=150, image_path="testicon.png",onclick=on_icon_click)
