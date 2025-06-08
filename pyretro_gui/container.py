@@ -1,5 +1,7 @@
 
 import pygame
+
+from .retro_button import RetroButton
 from .app_core import app_state
 from .constants import Colors
 
@@ -14,7 +16,7 @@ class Container():
 
         self.content_surf = content_surf
         self.content_size = list(content_surf.get_size())
-        
+
         self.onclick = onclick
         self.onpressed = onpressed
         self.anchors = anchors
@@ -22,7 +24,7 @@ class Container():
 
         self.pressed = False
         self.__prev_pressed = self.pressed
-        
+
         self.mpos_inside = None
         self._prev_pos_inside = None
 
@@ -38,6 +40,8 @@ class Container():
         if self.is_scroll_y:
             self.scrollbars.append(ScrollBar(0, 0, h, self.content_size[1], anchors = [1, 0]))
             self.content_size[1] += ScrollBar.SCRLBAR_WIDTH
+
+
 
     def get_surface (self):
         return self._surface
@@ -106,9 +110,7 @@ class Container():
 
 
     def render (self, win, _):
-
         self._surface.fill((0, 0, 0))
-
         dif = self.get_content_dif()
         xp = 0 if not self.is_scroll_x else - dif[0] * self.get_x_scrollbar().progress
         yp = 0 if not self.is_scroll_x else - dif[1] * self.get_y_scrollbar().progress
@@ -121,37 +123,85 @@ class Container():
         pygame.draw.rect(self._surface, Colors.TEXT, self._surface.get_rect(), 1)
         win.blit(self._surface, self.get_rect(win.get_size()).topleft)
 
-# Agregar esta clase encima de Container para manejar el movimiento con drag & drop
+    def close_container(self):
+        app_state.widgets.remove(self)
+
+from .move_button import MoveButton  # importar MoveButton
+
 class MovableContainer(Container):
-    # Variable estática para controlar el z_index más alto usado
     _max_z_index = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dragging = False
         self.drag_offset = (0, 0)
-        # Al crearse, el container se pone arriba de todo
+
+        icon_size = RetroButton.ICON_SIZE
+        pad = RetroButton.PAD
+        icon_pad = RetroButton.PAD//2
+        # Crear un MoveButton en la parte superior que controla el movimiento
+
+        self.move_button = MoveButton(self.x, self.y+60, 10, 20)
+        # Poner z_index alto
         MovableContainer._max_z_index += 1
         self.z_index = MovableContainer._max_z_index
+        self.close_button = RetroButton(icon_size + icon_pad + pad, pad, w = icon_size, h = icon_size, colors=[Colors.CLOSE, Colors.CLOSE_HOVER],
+                                        anchors=[1, 0],
+                                        onclick=self.close_container, z_index=self.z_index, name="close")
+    #
+    # def on_move_pressed(self, button, pos_inside):
+    #     # Cuando se presiona el MoveButton, iniciar arrastre del container
+    #     mouse_pos = pygame.mouse.get_pos()
+    #     self.dragging = True
+    #     self.drag_offset = (mouse_pos[0] - self.x, mouse_pos[1] - self.y)
+    #     # Subir el z_index para estar arriba
+    #     MovableContainer._max_z_index += 1
+    #     self.z_index = MovableContainer._max_z_index
 
     def update(self, mouse_pos, mouse_btns, win_size):
+        self.move_button.x = self.x
+        self.move_button.y = self.y
+        self.move_button.w = self.w
+        self.close_button.x = self.x
+        self.close_button.y = self.y
+        self.close_button.w = self.w
+        self.close_button.update(mouse_pos,mouse_btns,win_size)
+
+        # Obtener rect del container
         rect = self.get_rect(win_size)
         mouse_inside = rect.collidepoint(mouse_pos)
 
+        # Comprobar si self es el container con z_index más alto bajo el cursor
+        if mouse_inside:
+            # Filtrar todos los MovableContainer que contienen el mouse
+            containers_under_mouse = [
+                w for w in app_state.widgets
+                if isinstance(w, MovableContainer) and w.get_rect(win_size).collidepoint(mouse_pos)
+            ]
+            # Encontrar el z_index máximo
+            max_z = max(w.z_index for w in containers_under_mouse) if containers_under_mouse else -1
+            # Solo permitir arrastrar si self tiene este z_index máximo
+            can_drag = (self.z_index == max_z)
+        else:
+            can_drag = False
+
         for event in app_state.events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if mouse_inside and event.button == 1:
-                    self.dragging = True
-                    self.drag_offset = (mouse_pos[0] - self.x, mouse_pos[1] - self.y)
-                    # Al presionar este container, se pone arriba de todo
-                    MovableContainer._max_z_index += 1
-                    self.z_index = MovableContainer._max_z_index
+                if event.button == 1 and can_drag:
+                    # Mouse presionado dentro y es el container más arriba
+                    if self.get_rect(win_size).collidepoint(mouse_pos):
+                        self.dragging = True
+                        self.drag_offset = (mouse_pos[0] - self.x, mouse_pos[1] - self.y)
+                        # Subir el z_index para estar arriba
+                        MovableContainer._max_z_index += 1
+                        self.z_index = MovableContainer._max_z_index
 
-            elif event.type == pygame.MOUSEBUTTONUP:
+            if event.type == pygame.MOUSEBUTTONUP:
                 if event.button == 1:
                     self.dragging = False
 
             elif event.type == pygame.MOUSEWHEEL:
+                # misma lógica scroll existente
                 s = self.get_x_scrollbar() if pygame.key.get_pressed()[pygame.K_LSHIFT] else self.get_y_scrollbar()
                 if s is not None:
                     if event.y < 0:
@@ -171,3 +221,8 @@ class MovableContainer(Container):
             self.y = mouse_pos[1] - self.drag_offset[1]
 
         super().update(mouse_pos, mouse_btns, win_size)
+
+    def render(self, win, win_size):
+        super().render(win, win_size)
+        self.move_button.render(win, win_size)
+        self.close_button.render(win, win_size)

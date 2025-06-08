@@ -94,14 +94,12 @@ def create_window (w: int, h: int, caption: str, icon: str | None = None, flags:
         elif app_state.get_visible_count() == 2:
             add_widget(_minimize_btn)
     else:
-
         add_widget(_minimize_btn)
         if flags & pygame.RESIZABLE:
             add_widget(_maximize_button)
             add_widget(Border(border_width = 4, onpressed = _rezize_window ))
-
-
-    add_widget(MoveButton(app_state.get_visible_count()*(icon_size+icon_pad)+pad, pad, h = 20, anchors = [1, 0], onpressed = _move_window))
+    #topbar of window
+    add_widget(MoveButton(app_state.get_visible_count()*(icon_size+icon_pad)+pad, pad, w=_win_size[0] - icon_size - 2*pad  - (app_state.visible_buttons_count * (icon_size + pad//2)) - pad,h = 20, anchors = [1, 0], onpressed = _move_window))
     add_widget(Icon(pad, pad, icon = ico, z_index = 99))
 
 
